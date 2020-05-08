@@ -1,0 +1,9 @@
+*.sqlite3 filter=lfs diff=lfs merge=lfs -text
+crispy_forms/ filter=lfs diff=lfs merge=lfs -text
+media/ filter=lfs diff=lfs merge=lfs -text
+node_modules/ filter=lfs diff=lfs merge=lfs -text
+project/ filter=lfs diff=lfs merge=lfs -text
+staticfiles/ filter=lfs diff=lfs merge=lfs -text
+stocksearch/ filter=lfs diff=lfs merge=lfs -text
+templates/ filter=lfs diff=lfs merge=lfs -text
+users/ filter=lfs diff=lfs merge=lfs -text
