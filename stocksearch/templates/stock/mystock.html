@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+
+    <script type="text/javascript">
+        function deletebookmarksstock(){
+
+                           if(document.getElementById("mySelect").value)
+                           var a = document.getElementById("mySelect").value
+                           {
+                               $.ajax({
+                                  url :"{% url 'deletemystockinfo' %}",
+                                  method: 'POST',
+                                  data:{
+                                    // fallback : true,
+                                    stockname: document.getElementById("mySelect").value,
+                                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                                  },
+                                  success: function(data) {
+                                    var b = String(a)
+                                    var hold = "some-class-" +  b
+                                    //var x = document.getElementsByClassName(hold);
+
+
+                                    Element.prototype.remove = function() {
+                                    this.parentElement.removeChild(this);
+                                    }
+
+                                    NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
+                                        for(var i = this.length - 1; i >= 0; i--) {
+                                            if(this[i] && this[i].parentElement) {
+                                                this[i].parentElement.removeChild(this[i]);
+                                            }
+                                        }
+                                    }
+                                    document.getElementsByClassName(hold).remove();
+                                    window.location.reload();
+
+                                }
+                            })
+                        }
+                    };
+        function conf(){
+
+            if (document.getElementById("mySelect").value == ""){
+                alert("Please add a stock using the add to watch list button in the search page")
+            }
+            else{
+                var con=confirm("Do you want to delete this bookmarked stock");
+
+                if (con == true){
+                    deletebookmarksstock()
+                }
+                else{
+                    return
+                }
+            }
+        };
+
+
+
+        setInterval(function(){
+            $.ajax({
+           url :"{% url 'mystockinfos' %}",
+           method: 'GET',
+           data:{
+             csrfmiddlewaretoken: '{{ csrf_token }}',
+           },
+           success: function() {
+               console.log("page refresh")
+         }
+     }) }, 5000);
+
+
+
+
+
+    </script>
+
+    <div class="row">
+            <div class="col-md-12">
+                <table  class="table table-striped table-bordered table-sm col-md-12" cellspacing="0" width="100%" >
+                      <thead>
+                        <tr>
+                          <th class="th-sm">Stockname
+                          </th>
+                          <th class="th-sm">Ticker Symbol
+                          </th>
+                          <th class="th-sm">Change Percentage
+                          </th>
+                          <th class="th-sm">Open
+                          </th>
+                          <th class="th-sm">High
+                          </th>
+                          <th class="th-sm">Low
+                          </th>
+                          <th class="th-sm">Close
+                          </th>
+                          <th class="th-sm">Volume
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                          {%for instance in object_list%}
+                        <tr class="some-class-{{ instance.name }}">
+                          <td>{{ instance.name }}</td>
+                          <td>{{ instance.stockname }}</td>
+                          <td>{{ instance.changepct }}</td>
+                          <td>{{ instance.open }}</td>
+                          <td>{{ instance.high }}</td>
+                          <td>{{ instance.low }}</td>
+                          <td>{{ instance.close }}</td>
+                          <td>{{ instance.volume }}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                </table>
+            </div>
+    </div>
+
+
+    <div class="row">
+          <div class="col-md-12">
+              <div class="input-group">
+                    <select id= "mySelect" class="custom-select" id="inputGroupSelect04">
+                        {%for instance in object_list%}
+                        <option class="some-class-{{ instance.name }}">{{instance.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="input-group-append">
+                      <button onclick="conf();" class="btn btn-info" type="button">Delete Specified Stock</button>
+                    </div>
+              </div>
+        </div>
+    </div>
+
+
+
+
+{% endblock %}

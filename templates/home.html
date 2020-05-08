@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+
+{% block content %}
+
+
+            <div class="text-center" style="position:relative;top:200px;">
+
+
+
+
+                <h2 style="font-size:80px;">Welcome to Stock Analytica</h2>
+
+
+
+                <button  class="btn btn-info" data-toggle="collapse" data-target="#target">Get Started</button>
+
+                <div style="position:relative;top:20px;" id="target" class="collapse">
+
+                    {% if user.is_authenticated %}
+                        <span id="more">Stock analytica is a company which aims to make understanding the FTSE 100 stock market easy.We will provide you with the best and most useful stock metrics available to help you make the best decisions when buying into any new stock.</span>
+                    {% else %}
+                        <span id="more">Stock analytica is a company which aims to make understanding the FTSE 100 stock market easy.We will provide you with the best and most useful stock metrics available to help you make the best decisions when buying into any new stock.To get started click the  <a href="{% url 'signup' %}" >Sign up</a> link to gain access to our Search page and Watchlist page.If you are a already existing member of Stock Analytica click the <a href="{% url 'login' %}" >Log in</a> link. to properly undertand how top use our awesome system please click the <a href="{% url 'help' %}">Help</a> page.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+
+
+
+
+            <footer class="fixed-bottom">
+
+
+              <div class="text-center">© 2020 Copyright:
+                <b> StockAnalytica </b>
+              </div>
+
+
+            </footer>
+
+{% endblock %}

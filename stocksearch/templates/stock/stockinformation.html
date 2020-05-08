@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+            <style media="screen">
+
+                .container-main {
+                 margin-top: 75px;
+                }
+                 .scroll {
+                         max-height: 200px;
+                         overflow-y: auto;
+                     }
+                 .form-control-borderless {
+                 border: none;
+                 }
+                 .form-control-borderless:hover, .form-control-borderless:active, .form-control-borderless:focus {
+                     border: none;
+                     outline: none;
+                     box-shadow: none;
+                 }
+
+                input[type=text] {
+                  background-color:#FFFFFF;
+                  width: 100%;
+                }
+            </style>
+
+            <div class="row">
+                    <div class="col-xs-12 col-md-12">
+                            <div class="mr-auto ml-auto form-group search w-50 " style="float:left;">
+                               <input type="text" name='stockname' class="autocomplete"  id="search" value="" style="height: 40px;margin: 0 auto;" class="form-control " placeholder="Enter in a FTSE 100 stock">
+                            </div>
+                            <div class="mr-auto ml-auto form-group search w-50 btn-toolbar" style="float:right;" >
+                                <div>
+                                <input class="btn btn-info"  onclick="search();" type="submit" value="Search" style="position:relative;left:5px;">
+                                </div>
+                                {% if user.is_authenticated %}
+
+                                        <div>
+                                            <button id = "addstock" type="button" class="btn btn-info"  style="position:relative;left:10px;">Add To Watchlist</button>
+                                        </div>
+
+                                {% endif %}
+                            </div>
+                    </div>
+            </div>
+
+            <div class="row">
+                    <div class="col-xs-6 col-md-6">
+                        <div> <table class="table table-bordered table table-sm ">
+                            <thead>
+                              <tr>
+                                <th scope="col">Stock Metric</th>
+                                <th scope="col">Value</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <th scope="row">Symbol</th>
+                                <td id='symbol'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Ticker</th>
+                                <td id='stockname'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Current Price</th>
+                                <td id='currentprice'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row"> Latest Open Price</th>
+                                <td id='open'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row"> Latest High Price</th>
+                                <td id='high'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Latest Low Price</th>
+                                <td id='low'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Latest Close Price</th>
+                                <td id='close'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Volume</th>
+                                <td id='volume'></td>
+                              </tr>
+
+                              <tr>
+                                <th scope="row">Currency</th>
+                                <td id='currency'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Change Percentage %</th>
+                                <td id='changepercentage'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Volume Average</th>
+                                <td id='Volumeavg'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Total number of shares</th>
+                                <td id='shares'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Last Trade Time</th>
+                                <td id='time'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Timezone</th>
+                                <td id='timezone'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">Timezone name</th>
+                                <td id='timezonename'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">52 Week High</th>
+                                <td id='52high'></td>
+                              </tr>
+                              <tr>
+                                <th scope="row">52 Week Low</th>
+                                <td id='52low'></td>
+                              </tr>
+
+                              <tr>
+                                <th scope="row">Close Probability for Specified date</th>
+                                <td id='probability'></td>
+                              </tr>
+                            </tbody>
+                          </table> </div>
+
+                              <div class="card card hoverable scroll" style="width:auto;height:auto;">
+                                  <div class="card-header" style="width:750px;">
+                                      General Market News
+                                  </div>
+                                  <div id = "news">
+                                   </div>
+
+                             </div>
+
+
+
+
+
+                    </div>
+                    <div class="col-xs-6 col-md-6">
+
+                         <canvas id="myChart" width="500px" height="500px"></canvas>
+
+                         <div id="reportrange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+                             <i class="fa fa-calendar"></i>&nbsp;
+                             <span></span> <i class="fa fa-caret-down"></i>
+                         </div>
+
+                         <div class="card card hoverable scroll"  style="top:30px;">
+                             <div class="card-header">Company Profile</div>
+                             <div class="card-body">
+                                 <p id='info'></p>
+                             </div>
+                         </div>
+
+                    </div>
+
+
+
+
+            </div>
+
+            <script type="text/javascript">
+               $(function () {
+                        var myDate = new Date(2020, 03, 03);
+                        var start = moment(myDate).subtract(29, 'days');
+                        var end = moment(myDate).subtract(1, 'days');
+
+                        function cb(start, end) {
+                            $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                            startdate = String(start.format('YYYY-MM-DD'))
+                            enddate = String(end.format('YYYY-MM-DD'))
+                            console.log(currentstockname)
+                            count = 0
+
+                            $.ajax({
+                               url: "{% url 'stockinfo' %}",
+                               method: 'POST',
+                               data:{
+                                 stockname: currentstockname,
+                                 startDate : startdate,
+                                 endDate : enddate,
+                                 csrfmiddlewaretoken: '{{ csrf_token }}',
+                               },
+                               success: function(data) {
+                                  if (data['datastore'].length <=15){
+                                      var myDates = new Date(2020, 03, 03);
+                                      start = moment(myDates).subtract(29, 'days');
+                                      end = moment(myDates).subtract(1, 'days');
+                                      cb(start,end)
+                                      alert("It appears the date range you have chosen is not suitable please choose another date range.")
+                                      return
+                                  }
+
+                                  loadsearchinformation(data)
+                                  getnews()
+                               }
+                            });
+                        }
+                        $('#reportrange').daterangepicker({
+                            startDate: start,
+                            endDate: end,
+                            minDate:moment(myDateest).subtract(10, 'years'),
+                            maxDate: moment(myDateest).subtract(1, 'days'),
+                            ranges: {
+                               // 'Last 7 Days': [moment(myDateest).subtract(6, 'days'), moment(myDateest)],
+                               'Last 30 Days': [moment(myDateest).subtract(29, 'days'), moment(myDateest)],
+                               'Last Month': [moment(myDateest).subtract(1, 'month').startOf('month'), moment(myDateest).subtract(1, 'month').endOf('month')],
+                            }
+                        }, cb);
+                        cb(start, end);
+
+                    });
+                var currentstockname = ''
+                var dates = []
+                var datastore = []
+                var name = ''
+                var output = ''
+                var count = 0
+                var holder = 0
+                var myDateest = new Date(2020, 03, 03);
+                var options = {
+                     	url: "{% static 'stocksearch/stock.js' %}",
+                        list:{
+                            match: {
+                            enabled: true
+                        }
+                        }
+                    };
+                $("#search").easyAutocomplete(options);
+                function search () {
+                           $.ajax({
+                              url: "{% url 'stockinfo' %}",
+                              method: 'POST',
+                              data:{
+                                stockname: document.getElementById('search').value,
+                                startDate : startdate,
+                                endDate : enddate,
+                                csrfmiddlewaretoken: '{{ csrf_token }}',
+                              },
+                              success: function(data) {
+                                  if (data['datastore'].length <=15 ){
+                                      alert("It appears the date range you have chosen is not suitable for the chosen stock.Please choose another date range.")
+                                      return
+                                  }
+                                 currentstockname  = data['name']
+                                 loadsearchinformation(data)
+                                 getnews()
+                                 document.getElementById('search').value = ''
+                              }
+                           });
+                   };
+                function loadsearchinformation(data){
+                       document.getElementById('symbol').innerHTML = data['symbol']
+                       document.getElementById('stockname').innerHTML = data['name']
+                       document.getElementById('currentprice').innerHTML = data['currentprice']
+                       document.getElementById('open').innerHTML = data['open']
+                       document.getElementById('high').innerHTML = data['high']
+                       document.getElementById('low').innerHTML = data['low']
+                       document.getElementById('close').innerHTML = data['close']
+                       document.getElementById('volume').innerHTML = data['volume']
+                       document.getElementById('currency').innerHTML = data['currency']
+                       document.getElementById('changepercentage').innerHTML = data['changepercentage']
+                       document.getElementById('Volumeavg').innerHTML = data['volumeaverage']
+                       document.getElementById('shares').innerHTML = data['shares']
+                       document.getElementById('time').innerHTML = data['time']
+                       document.getElementById('timezone').innerHTML = data['timezone']
+                       document.getElementById('timezonename').innerHTML = data['timezonename']
+                       document.getElementById('52high').innerHTML = data['52high']
+                       document.getElementById('52low').innerHTML = data['52low']
+                       document.getElementById('info').innerHTML = data['description']
+                       document.getElementById('probability').innerHTML = data['estimate']
+                       dates = data['dates']
+                       datastore = data['datastore']
+
+                       if (data['changepercentage'] < 0){
+                           document.getElementById('changepercentage').style.color = "red";
+                       }
+                       else{
+                           document.getElementById('changepercentage').style.color = "green";
+                       }
+
+
+
+                       if (datastore == []){
+                           myChart.data.datasets[0].data = []
+                           myChart.data.labels = []
+                           myChart.update()
+                       }
+                       else
+                            myChart.data.datasets[0].data = []
+                            myChart.data.labels = []
+                            myChart.data.datasets[0].data = datastore
+                            myChart.data.labels = dates
+                            myChart.update()
+                   };
+                function getnews(){
+                    $.ajax({
+                       url: "{% url 'newsinfo' %}",
+                       method: 'GET',
+                       data:{
+                         csrfmiddlewaretoken: '{{ csrf_token }}',
+                       },
+                       success: function(data) {
+                          for (var i in data["data"]){
+
+                          output = output +   '<div class="card-image">' +  "<img src=" + '"' + data["data"][i]["image_url"] + '"' +  'style="width:750px;"' + "/>" +  '</div>' +'<div class="card-body">' +  "<a href=" + '"' + data["data"][i]["news_url"] + '"' + 'class="btn btn-info stretched-link"' + "/>" + data["data"][i]["title"] +  "</a>" + '<p>' + data["data"][i]["text"] + '</p>' + '</div>'
+                          if (i == 5){
+                            break
+                             }
+
+                         }
+                       document.getElementById('news').innerHTML = output;
+                       output = ''
+                       }
+                    })
+                };
+                var canvas = document.getElementById('myChart');
+                var ctx = canvas.getContext('2d');
+                var myChart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: dates,
+                                    datasets: [{
+                                        label: 'Close value',
+                                        data: datastore,
+                                        backgroundColor: [
+                                            'rgba(255, 99, 132, 0.2)',
+                                            'rgba(54, 162, 235, 0.2)',
+                                            'rgba(255, 206, 86, 0.2)',
+                                            'rgba(75, 192, 192, 0.2)',
+                                            'rgba(153, 102, 255, 0.2)',
+                                            'rgba(255, 159, 64, 0.2)'
+                                        ],
+                                        // backgroundColor: "#FFFFFF",
+                                        borderColor: [
+                                            'rgba(255, 99, 132, 1)',
+                                            'rgba(54, 162, 235, 1)',
+                                            'rgba(255, 206, 86, 1)',
+                                            'rgba(75, 192, 192, 1)',
+                                            'rgba(153, 102, 255, 1)',
+                                            'rgba(255, 159, 64, 1)'
+                                        ],
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    scales: {
+                                        yAxes: [{
+                                            ticks: {
+                                                beginAtZero: true
+                                            },
+                                            scaleLabel: {
+                                                display: true,
+                                                labelString: 'Close Price'
+                                              }
+                                        }],
+                                        xAxes: [{
+                                            ticks: {
+                                                beginAtZero: true
+                                            },
+                                            scaleLabel: {
+                                                display: true,
+                                                labelString: 'Dates'
+                                              }
+                                        }]
+                                    },
+                                    responsive: false
+                                }
+                            });
+                var blink = document.getElementById('changepercentage')
+                $(function(){
+                $("#addstock").click(function(){
+
+                    console.log(document.getElementById('symbol').innerHTML)
+                    if (document.getElementById('symbol').innerHTML){
+                    $.ajax({
+                        type: "POST",
+                        url: "{% url 'addstockinfos' %}",
+                        data:{
+                            stockname : document.getElementById('symbol').innerHTML
+                        },
+                        success: function(data){
+                            if (data['value'] == 'none'){
+                                alert('You cannot add the same stock')
+                            }
+                            else{
+                                alert('You have successfully added a stock to my stocks page.')
+                            }
+                        }
+                    })
+                    }
+
+                    })
+                })
+                 setInterval(function() {
+
+                    blink.style.opacity = (blink.style.opacity == 0 ? 1 : 0);
+                }, 1200);
+
+            </script>
+{% endblock %}

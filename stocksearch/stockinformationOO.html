@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+            <style media="screen">
+                .form-control-borderless {
+                border: none;
+                }
+
+                .form-control-borderless:hover, .form-control-borderless:active, .form-control-borderless:focus {
+                    border: none;
+                    outline: none;
+                    box-shadow: none;
+                }
+
+                ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+                      font-style: italic;
+                }
+                ::-moz-placeholder { /* Firefox 19+ */
+                    font-style: italic;
+                }
+                :-ms-input-placeholder { /* IE 10+ */
+                    font-style: italic;
+                }
+                :-moz-placeholder { /* Firefox 18- */
+                    font-style: italic;
+                }
+            </style>
+
+
+           <script src="{% static 'stocksearch/jquery.easy-autocomplete.min.js'  %}"></script>
+           <link rel="stylesheet" href= "{% static 'stocksearch/easy-autocomplete.min.css'  %}">
+           <link rel="stylesheet" href= "{% static 'stocksearch/easy-autocomplete.themes.min.css' %}">
+
+
+
+           <form action="{% url 'stockinfo' %}">
+           <div class="mr-auto ml-auto form-group search w-50">
+               <input type="text" name='stockname' onchange="this.form.submit();" id="search" value="" style="height: 40px;margin: 0 auto;" class="form-control " placeholder="Enter in a FTSE 100 stock">
+           </div>
+           </form>
+
+           <script type="text/javascript">
+               function loadsearch(data){
+                   document.getElementById('symbol').innerHTML = data['symbol']
+                   document.getElementById('stockname').innerHTML = data['name']
+                   document.getElementById('currentprice').innerHTML = data['currentprice']
+                   document.getElementById('open').innerHTML = data['open']
+                   document.getElementById('high').innerHTML = data['high']
+                   document.getElementById('low').innerHTML = data['low']
+                   document.getElementById('close').innerHTML = data['close']
+                   document.getElementById('volume').innerHTML = data['volume']
+
+                    //symbol = data['symbol']
+                   // api_url = 'https://api.worldtradingdata.com/api/v1/history?symbol=' + data['symbol'] + '&api_token=tsNxMjm41n3RocYkyWfIgB6xk1Z1RRahzAjzJk3pY6yQv8LR8h90kBonygk5';
+                   //listdatevalues()
+                   // getStockHistory().catch(error => {
+                   //     console.log('could not find value');
+                   // });
+               }
+
+               // function search () {
+               //     if(document.getElementById('search').value)
+               //     {
+               //         $.ajax({
+               //            url: "{% url 'stockinfo' %}",
+               //            method: 'POST',
+               //            data:{
+               //              stockname: document.getElementById('search').value,
+               //              startDate : '2020-02-01',
+               //              endDate : '2020-02-12',
+               //              csrfmiddlewaretoken: '{{ csrf_token }}',
+               //            },
+               //            success: function(data) {
+               //               console.log(data)
+               //               loadsearch(data)
+               //               listdatevalues()
+               //               getStockHistory().catch(error => {
+               //                   console.log('could not find value');
+               //               });
+               //               console.log(datastore)
+               //               //loadchart(newdates)
+               //            }
+               //         });
+               //     }
+               // } Shaklain
+           </script>
+
+
+           <!-- <div class="mr-auto ml-auto form-group search w-50">
+               <input type="text" name='stockname' onchange="search();" id="search" value="" style="height: 40px;margin: 0 auto;" class="form-control " placeholder="Enter in a FTSE 100 stock">
+           </div> -->
+
+
+
+
+
+           <canvas style = "margin: 0 auto;" id="myChart" width="400" height="400"></canvas>
+
+           <!-- <div id="canvas_parent">
+               <canvas style = "margin: 0 auto;" id="myChart" width="400" height="400"></canvas>
+           </div> -->
+
+            <script type="text/javascript">
+                   var options = {
+                               data: [     "AAL Anglo American",
+                                           "ABF Associated British Foods",
+                                           "ADM Admiral",
+                                           "AHT Ashtead",
+                                           "ANTO Antofagasta",
+                                           "AUTO Auto Trader",
+                                           "AV. Aviva",
+                                           "AVV Aveva",
+                                           "AZN Astrazeneca ",
+                                           "BA. BAE Systems ",
+                                           "BARC Barclays",
+                                           "BATS BAT",
+                                           "BDEV Barratt Developments",]};
+                   $("#search").easyAutocomplete(options);
+
+                    // Returns an array of dates between the two dates
+
+// Arafat
+                    var datelist = []
+                    var newdates = []
+                    var datastore = []
+                    var lengths = 0
+                    var symbol = '{{symbol}}'
+                    var api_url = 'https://api.worldtradingdata.com/api/v1/history?symbol=' + symbol + '&api_token=tsNxMjm41n3RocYkyWfIgB6xk1Z1RRahzAjzJk3pY6yQv8LR8h90kBonygk5';
+
+
+
+
+                    var getDates = function(startDate, endDate) {
+                     var dates = [],
+                      currentDate = startDate,
+                      addDays = function(days) {
+                        var date = new Date(this.valueOf());
+                        date.setDate(date.getDate() + days);
+                        return date;
+                      };
+                      while (currentDate <= endDate) {
+                        dates.push(currentDate);
+                        currentDate = addDays.call(currentDate, 1);
+                      }
+                      return dates;
+                    };
+                    function formatDate(date) {
+                        var d = new Date(date),
+                            month = '' + (d.getMonth() + 1),
+                            day = '' + d.getDate(),
+                            year = d.getFullYear();
+
+                        if (month.length < 2)
+                            month = '0' + month;
+                        if (day.length < 2)
+                            day = '0' + day;
+
+                        return [year, month, day].join('-');
+                    };
+                    function listdatevalues(a,b) {
+                        var dates = getDates(new Date(2020,01,01), new Date(2020,02,12));
+                        //var dates = getDates(a, b);
+                        dates.forEach(function(date) {
+                                if(date.getDay() == 6 || date.getDay() == 0) {
+                                    console.log("date not accepted")
+                                }
+                                else {
+                                    datelist.push(formatDate(date))
+                                    lengths+=1
+                                }
+                          })
+                        };
+                    async function getStockHistory(){
+                        const response = await fetch(api_url);
+                        const data = await response.json();
+                        //console.log(data)
+
+                        // if (data['Message']) {
+                        //     alert('not found')
+                        // }
+                        //datastore = []
+
+                        for (i = 0; i < lengths; i++){
+                             var a = String(datelist[i])
+                             try{
+                             b = data["history"][a].close;
+                             datastore.push(b);
+                             newdates.push(datelist[i]);
+                            }
+                             catch(err){
+                                 continue
+                             }
+
+                        };
+                        //datelist = []
+                        // console.log(newdates)
+                        // console.log(datelist)
+                        // console.log(datastore)
+                        // console.log(datastore.length)
+                        // console.log(datelist.length)
+                        loadchart(newdates)
+                    }
+                    listdatevalues()
+                    getStockHistory().catch(error => {
+                        console.log('could not find value');
+                    });
+
+
+
+
+
+                    //console.log(datastore)
+                    //console.log(datastore)
+                    //console.log(datelist)
+                    //console.log(newdates)
+
+// Arafat
+
+// Shaklain
+                    // beginLoadChart()
+                    //
+                    // function beginLoadChart() {
+                    //     original_chart = $('#myChart').clone()
+                    //     loadchart([],true)
+                    // }
+                    //
+                    // var myChart = null;
+                    //
+                    // function addData(chart, label, data) {
+                    //     chart['data']['labels'] = label
+                    //     chart['data']['datasets'][0]['data'] = data
+                    //     chart.update();
+                    // }
+                    //
+                    // function removeData(chart) {
+                    //     chart['data']['labels'] = []
+                    //     chart['data']['datasets'][0]['data'] = []
+                    //     chart.update();
+                    // }
+                    //
+                    // var original_chart;
+
+                    // function loadchart(arr, init=false){
+                    //     var canvas = document.getElementById('myChart')
+                    //     var ctx = canvas.getContext('2d');
+                    //     if (!init) {
+                    //         console.log('UPDATE HERE')
+                    //         // removeData(myChart)
+                    //         // addData(myChart, arr, datastore)
+                    //         // $('#canvas_parent').html('')
+                    //         // if ($('#canvas_parent').next().is('canvas')) {
+                    //         //     $('#canvas_parent').next().remove()
+                    //         //     console.log('REMOVED')
+                    //         // }
+                    //
+                    //         $('#canvas_parent').append(('<canvas style = "margin: 0 auto;" width="400" height="400"></canvas>'))
+                    //         var canv = $('#canvas_parent canvas:last-child')[0]
+                    //         var ct = canv.getContext('2d')
+                    //         var new_m = new Chart(ct, {
+                    //                 type: 'line',
+                    //                 data: {
+                    //                     labels: arr,
+                    //                     datasets: [{
+                    //                         label: 'Close value',
+                    //                         data: datastore,
+                    //                         backgroundColor: [
+                    //                             'rgba(255, 99, 132, 0.2)',
+                    //                             'rgba(54, 162, 235, 0.2)',
+                    //                             'rgba(255, 206, 86, 0.2)',
+                    //                             'rgba(75, 192, 192, 0.2)',
+                    //                             'rgba(153, 102, 255, 0.2)',
+                    //                             'rgba(255, 159, 64, 0.2)'
+                    //                         ],
+                    //                         borderColor: [
+                    //                             'rgba(255, 99, 132, 1)',
+                    //                             'rgba(54, 162, 235, 1)',
+                    //                             'rgba(255, 206, 86, 1)',
+                    //                             'rgba(75, 192, 192, 1)',
+                    //                             'rgba(153, 102, 255, 1)',
+                    //                             'rgba(255, 159, 64, 1)'
+                    //                         ],
+                    //                         borderWidth: 1
+                    //                     }]
+                    //                 },
+                    //                 options: {
+                    //                     scales: {
+                    //                         yAxes: [{
+                    //                             ticks: {
+                    //                                 beginAtZero: true
+                    //                             }
+                    //                         }]
+                    //                     },
+                    //                     responsive: false
+                    //                 }
+                    //             });
+                    //         return
+                    //     }
+                    //     myChart = new Chart(ctx, {
+                    //             type: 'line',
+                    //             data: {
+                    //                 labels: arr,
+                    //                 datasets: [{
+                    //                     label: 'Close value',
+                    //                     data: datastore,
+                    //                     backgroundColor: [
+                    //                         'rgba(255, 99, 132, 0.2)',
+                    //                         'rgba(54, 162, 235, 0.2)',
+                    //                         'rgba(255, 206, 86, 0.2)',
+                    //                         'rgba(75, 192, 192, 0.2)',
+                    //                         'rgba(153, 102, 255, 0.2)',
+                    //                         'rgba(255, 159, 64, 0.2)'
+                    //                     ],
+                    //                     borderColor: [
+                    //                         'rgba(255, 99, 132, 1)',
+                    //                         'rgba(54, 162, 235, 1)',
+                    //                         'rgba(255, 206, 86, 1)',
+                    //                         'rgba(75, 192, 192, 1)',
+                    //                         'rgba(153, 102, 255, 1)',
+                    //                         'rgba(255, 159, 64, 1)'
+                    //                     ],
+                    //                     borderWidth: 1
+                    //                 }]
+                    //             },
+                    //             options: {
+                    //                 scales: {
+                    //                     yAxes: [{
+                    //                         ticks: {
+                    //                             beginAtZero: true
+                    //                         }
+                    //                     }]
+                    //                 },
+                    //                 responsive: false
+                    //             }
+                    //         });
+                    //     };
+// Shaklain
+              function loadchart(datelist){
+                        var canvas = document.getElementById('myChart')
+                        var ctx = canvas.getContext('2d');
+                        //ctx.clearRect(0,0,canvas.width, canvas.height)
+                        var myChart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: datelist,
+                                    datasets: [{
+                                        label: 'Close value',
+                                        data: datastore,
+                                        backgroundColor: [
+                                            'rgba(255, 99, 132, 0.2)',
+                                            'rgba(54, 162, 235, 0.2)',
+                                            'rgba(255, 206, 86, 0.2)',
+                                            'rgba(75, 192, 192, 0.2)',
+                                            'rgba(153, 102, 255, 0.2)',
+                                            'rgba(255, 159, 64, 0.2)'
+                                        ],
+                                        borderColor: [
+                                            'rgba(255, 99, 132, 1)',
+                                            'rgba(54, 162, 235, 1)',
+                                            'rgba(255, 206, 86, 1)',
+                                            'rgba(75, 192, 192, 1)',
+                                            'rgba(153, 102, 255, 1)',
+                                            'rgba(255, 159, 64, 1)'
+                                        ],
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    scales: {
+                                        yAxes: [{
+                                            ticks: {
+                                                beginAtZero: true
+                                            }
+                                        }]
+                                    },
+                                    responsive: false
+                                }
+                            });
+                        };
+
+                        //loadchart(newdates)
+
+            </script>
+
+
+
+            <table class="table fixed-bottom">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th scope="col"> Symbol</th>
+                      <th scope="col"> Company name</th>
+                      <th scope="col"> Current price</th>
+                      <th scope="col"> Open </th>
+                      <th scope="col"> High </th>
+                      <th scope="col"> Low </th>
+                      <th scope="col"> Close </th>
+                      <th scope="col"> Volume</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td id='symbol' >{{symbol}}</td>
+                      <td id='stockname' >{{name}}</td>
+                      <td id='currentprice'>{{currentprice}}</td>
+                      <td id='open'>{{open}}</td>
+                      <td id='high'>{{high}}</td>
+                      <td id='low'>{{low}}</td>
+                      <td id='close'>{{close}}</td>
+                      <td id='volume'>{{volume}}</td>
+
+
+                      <!-- <td id='symbol' ></td>
+                      <td id='stockname' ></td>
+                      <td id='currentprice'></td>
+                      <td id='open'></td>
+                      <td id='high'></td>
+                      <td id='low'></td>
+                      <td id='close'></td>
+                      <td id='volume'></td> -->
+                    </tr>
+
+                  </tbody>
+            </table>
+
+
+
+           {% endblock %}
