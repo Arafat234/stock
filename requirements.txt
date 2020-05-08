@@ -8,7 +8,7 @@ chardet==3.0.4
 Command==0.1.0
 contrib==0.3.0
 cycler==0.10.0
-Django==2.2
+Django==2.2.10
 django-mysql==3.3.0
 get==2019.4.13
 idna==2.8
